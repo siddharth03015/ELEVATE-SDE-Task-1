@@ -1,0 +1,38 @@
+.footer {
+  margin-top: auto;
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--color-border);
+  background: rgba(6, 11, 24, 0.5);
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.footer-brand-icon {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, var(--color-accent), #6366f1);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.footer-text {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
