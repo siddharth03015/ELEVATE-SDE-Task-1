@@ -1,0 +1,29 @@
+{
+  "name": "credvault-backend",
+  "version": "1.0.0",
+  "description": "CredVault — Certificate Issuing & Verification Platform Backend APIs & Database",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node test-api.js"
+  },
+  "keywords": [
+    "credvault",
+    "certificates",
+    "verification",
+    "express",
+    "sqlite",
+    "api"
+  ],
+  "author": "Siddharth Verma",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.7"
+  }
+}
