@@ -2,43 +2,80 @@
 
 [![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-5.x-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
-[![React Router](https://img.shields.io/badge/React_Router-v6-CA4245?logo=react-router&logoColor=white)](https://reactrouter.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.21-000000?logo=express&logoColor=white)](https://expressjs.com/)
+[![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?logo=sqlite&logoColor=white)](https://sqlite.org/)
+[![JWT](https://img.shields.io/badge/JWT-Protected-000000?logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
+[![Build](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
 
-> **CredVault** is a digital certificate management and verification platform. It enables citizens to seamlessly submit certificate applications, track their status in real-time, and verify existing digital credentials. Authorized administrators can review submissions, approve applications (auto-issuing digital certificates), reject invalid entries, and revoke certificates.
+> **CredVault** is a full-stack digital certificate management and verification platform. It allows citizens to seamlessly apply for certificates, track applications in real-time, and verify credential authenticity. Administrators can review queues, approve applications (auto-issuing verifiable credentials), reject submissions, and revoke certificates.
+> 
+> The platform includes both a **React 18 + Vite frontend** and a **Node.js + Express + SQLite3 backend REST API engine** with automated test suites.
 
 ---
 
 ## 📑 Table of Contents
 
 1. [Project Overview](#-project-overview)
-2. [Key Features](#-key-features)
-3. [UML Diagrams & System Design](#-uml-diagrams--system-design)
+2. [Architecture & System Design](#-architecture--system-design)
+3. [Key Features](#-key-features)
+4. [UML Diagrams & System Specifications](#-uml-diagrams--system-specifications)
    - [1. UML Use Case Diagram](#1-uml-use-case-diagram)
    - [2. UML Class & Domain Model Diagram](#2-uml-class--domain-model-diagram)
-   - [3. UML Sequence Diagram: Citizen Request & Tracking Flow](#3-uml-sequence-diagram-citizen-request--tracking-flow)
+   - [3. UML Sequence Diagram: Citizen Flow](#3-uml-sequence-diagram-citizen-flow)
    - [4. UML Sequence Diagram: Admin Issuance Flow](#4-uml-sequence-diagram-admin-issuance-flow)
-   - [5. UML State Machine Diagram: Lifecycle States](#5-uml-state-machine-diagram-lifecycle-states)
-   - [6. UML Component & Architecture Diagram](#6-uml-component--architecture-diagram)
-4. [Tech Stack](#-tech-stack)
-5. [Project Structure](#-project-structure)
-6. [Screenshots & Visual Tour](#-screenshots--visual-tour)
-7. [Getting Started & Local Setup](#-getting-started--local-setup)
-8. [Admin Access & Demo Test Data](#-admin-access--demo-test-data)
-9. [Data Storage & Persistence](#-data-storage--persistence)
-10. [Roadmap & Future Extensions](#-roadmap--future-extensions)
+   - [5. UML State Machine Diagram](#5-uml-state-machine-diagram)
+   - [6. UML Full-Stack Component & Data Flow Diagram](#6-uml-full-stack-component--data-flow-diagram)
+5. [Backend REST API Specifications](#-backend-rest-api-specifications)
+6. [Database Models & Schemas](#-database-models--schemas)
+7. [Screenshots & Visual Tour](#-screenshots--visual-tour)
+8. [Full-Stack Tech Stack](#-full-stack-tech-stack)
+9. [Project Structure](#-project-structure)
+10. [Local Setup & Running Instructions](#-local-setup--running-instructions)
+11. [Automated API Testing](#-automated-api-testing)
+12. [Admin Credentials & Seed Test Records](#-admin-credentials--seed-test-records)
+13. [License](#-license)
 
 ---
 
 ## 🌟 Project Overview
 
-Traditional public credential issuance often suffers from bureaucratic delays, lack of transparency, and vulnerability to document tampering. **CredVault** solves these challenges by providing:
+Traditional public document issuance is vulnerable to manual delays, record tampering, and forged physical certificates. **CredVault** delivers a robust digital alternative:
 
-- **Self-Service Citizen Portal:** Instant application dispatch with validation and unique identifier tracking (`APP-XXXX`).
-- **Cryptographic/Id-Based Verification:** Publicly accessible lookup engine verifying certificate validity (`CERT-XXXX`) in milliseconds.
-- **Admin Command Center:** Audit trail interface allowing authorized staff to inspect, approve, reject, or revoke credentials.
-- **Zero-Latency Client-Side Persistence:** Complete frontend state persistence through HTML5 LocalStorage, with zero backend dependency for rapid prototyping and validation.
+- **Self-Service Citizen Portal:** Public form validation, instant confirmation receipts, and unique tracking IDs (`APP-XXXX`).
+- **Real-Time Tracking & Verification:** Sub-millisecond lookup for tracking status and verifying certificate validity (`CERT-XXXX`).
+- **Admin Command Center:** Officer audit dashboard with one-click **Approve & Issue**, **Reject**, and **Revoke** controls.
+- **Relational Backend Engine:** Express REST APIs backed by SQLite3 (`credvault.db`) with foreign key constraints, automated sequential ID generation, and JWT authentication.
+
+---
+
+## 🏗️ Architecture & System Design
+
+```mermaid
+flowchart LR
+    subgraph Client ["Client Tier (Port 5173)"]
+        SPA["React 18 Single Page App"]
+        Vite["Vite Dev / Prod Server"]
+        Router["React Router v6"]
+    end
+
+    subgraph API ["API Tier (Port 5000)"]
+        Express["Express.js Server"]
+        AuthMiddleware["JWT Auth Middleware"]
+        ValMiddleware["Input Validation"]
+        RouterAPI["REST API Router"]
+    end
+
+    subgraph Data ["Data Tier"]
+        SQLite[("SQLite3 Database\ncredvault.db")]
+        Tables["Applications | Certificates | Admins"]
+    end
+
+    Client <-->|REST API / JSON| API
+    API <-->|SQL Queries| SQLite
+    SQLite --- Tables
+```
 
 ---
 
@@ -46,33 +83,28 @@ Traditional public credential issuance often suffers from bureaucratic delays, l
 
 | Category | Capability | Description |
 |---|---|---|
-| **Public Services** | 📝 **Certificate Application** | Full form validation (Name, 10-digit Phone, State, City, Gender) with immediate receipt generation. |
-| | 🔍 **Live Application Tracking** | Real-time status lookup (`Pending`, `Approved`, `Rejected`) using unique Application ID. |
-| | 🛡️ **Instant Verification** | Public credential authenticity check returning status (`Valid`, `Revoked`), holder details, and issuance date. |
-| **Admin Controls** | 🔐 **Secure Officer Login** | Protected routes for authenticated administrative staff. |
-| | 📂 **Application Queue Management** | Filterable table of all citizen applications with one-click **Issue** or **Reject** workflows. |
-| | 📜 **Certificate Registry & Revocation** | Centralized ledger of issued certificates with real-time **Revoke** capability. |
-| **Design System** | 🎨 **Premium Modern UI** | Dark glassmorphism theme, vibrant gradients, micro-animations, fully responsive on mobile, tablet, and desktop. |
+| **Public Services** | 📝 **Certificate Request** | Citizen application form with full validation (Name, 10-digit Phone, State, City, Gender) and immediate receipt modal. |
+| | 🔍 **Application Tracking** | Look up application lifecycle status (`Pending`, `Approved`, `Rejected`) by Application ID (`APP-XXXX`). |
+| | 🛡️ **Instant Verification** | Public authenticity verification check returning status (`Valid`, `Revoked`), holder details, and issue date. |
+| **Admin Operations** | 🔐 **JWT Authentication** | Salted bcrypt passwords and JWT bearer tokens protecting sensitive officer endpoints. |
+| | 📂 **Application Management** | Real-time queue review with one-click **Issue** (auto-generates certificate) and **Reject** workflows. |
+| | 📜 **Certificate Registry** | Comprehensive credentials ledger with immediate **Revocation** capability. |
+| **Data Integrity** | 🔒 **Strict Lifecycle Rules** | When a certificate is revoked, only the certificate status changes to `Revoked`; original application remains intact. |
+| | 🧪 **Automated Test Suite** | 34 automated unit/integration tests covering all 9 API endpoints, auth guards, and status transitions. |
 
 ---
 
-## 📐 UML Diagrams & System Design
-
-To provide a comprehensive technical understanding of CredVault's architecture and interactions, the following **Unified Modeling Language (UML)** specifications illustrate the system across multiple perspectives.
+## 📐 UML Diagrams & System Specifications
 
 ---
 
 ### 1. UML Use Case Diagram
 
-The Use Case diagram illustrates the system boundaries, the primary actors (**Citizen** and **Administrator**), and their interactions with CredVault's core capabilities.
-
 ```mermaid
 flowchart LR
-    %% Actors
     Citizen(["👤 Citizen / Public User"])
     Admin(["👮 System Administrator"])
 
-    %% CredVault System Boundary
     subgraph CredVault ["🏛️ CredVault System Boundary"]
         UC1(["UC-1: Apply for Certificate"])
         UC2(["UC-2: Track Application Status"])
@@ -85,12 +117,10 @@ flowchart LR
         UC9(["UC-9: Revoke Issued Certificate"])
     end
 
-    %% Citizen Associations
     Citizen --> UC1
     Citizen --> UC2
     Citizen --> UC3
 
-    %% Admin Associations
     Admin --> UC4
     Admin --> UC5
     Admin --> UC6
@@ -98,7 +128,6 @@ flowchart LR
     Admin --> UC8
     Admin --> UC9
 
-    %% Includes & Extends Relationships
     UC6 -.->|<<includes>>| UC8
     UC9 -.->|<<updates>>| UC3
 ```
@@ -107,11 +136,8 @@ flowchart LR
 
 ### 2. UML Class & Domain Model Diagram
 
-The Class Diagram highlights the structural data models, entity relationships, enumerations, and service interfaces implemented in CredVault.
-
 ```mermaid
 classDiagram
-    %% Enumerations
     class ApplicationStatus {
         <<enumeration>>
         Pending
@@ -132,9 +158,8 @@ classDiagram
         Other
     }
 
-    %% Core Domain Entities
     class Application {
-        +String id
+        +String applicationId
         +String name
         +String phone
         +Gender gender
@@ -142,188 +167,169 @@ classDiagram
         +String state
         +ApplicationStatus status
         +String submittedAt
+        +String rejectReason
     }
 
     class Certificate {
-        +String id
+        +String certificateId
         +String applicationId
         +String name
         +String phone
-        +String city
-        +String state
-        +CertificateStatus status
         +String issuedOn
+        +CertificateStatus status
     }
 
     class AdminUser {
         +String username
         +String password
-        +Boolean isAuthenticated
-        +login(username, password) Boolean
-        +logout() void
+        +login(username, password) Token
     }
 
-    %% Service / Store Controller
-    class AppContextStore {
-        +List~Application~ applications
-        +List~Certificate~ certificates
-        +Boolean isAdmin
-        +submitApplication(formData) Application
-        +trackApplication(appId) Application
-        +verifyCertificate(certId) Certificate
-        +approveApplication(appId) void
-        +rejectApplication(appId) void
-        +revokeCertificate(certId) void
-        +getNextAppId() String
-        +getNextCertId() String
+    class CredVaultAPI {
+        +createApplication(data) Application
+        +trackApplication(id) Application
+        +verifyCertificate(id) Certificate
+        +adminLogin(user, pass) Token
+        +listApplications() List~Application~
+        +approveApplication(id) Certificate
+        +rejectApplication(id, reason) Application
+        +listCertificates() List~Certificate~
+        +revokeCertificate(id) Certificate
     }
 
-    class LocalStorageEngine {
-        +loadFromStorage(key, fallback) Object
-        +saveToStorage(key, data) void
-    }
-
-    %% Relationships
     Application "1" ..> "0..1" Certificate : generates on approval
     Application --> ApplicationStatus : status
     Application --> Gender : gender
     Certificate --> CertificateStatus : status
-
-    AppContextStore "1" *-- "*" Application : manages
-    AppContextStore "1" *-- "*" Certificate : manages
-    AppContextStore "1" o-- "1" AdminUser : manages session
-    AppContextStore ..> LocalStorageEngine : persists state
+    CredVaultAPI *-- Application : manages
+    CredVaultAPI *-- Certificate : manages
+    CredVaultAPI o-- AdminUser : authenticates
 ```
 
 ---
 
-### 3. UML Sequence Diagram: Citizen Request & Tracking Flow
-
-This sequence diagram depicts the end-to-end user interaction when a citizen fills out an application form, submits it, receives an Application ID, and subsequently tracks its status.
+### 3. UML Sequence Diagram: Citizen Flow
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Citizen as 👤 Citizen
-    participant RequestPage as 📄 RequestPage (UI)
-    participant Context as ⚙️ AppContext (State)
-    participant Storage as 💾 LocalStorage
-    participant TrackPage as 🔍 TrackPage (UI)
+    participant UI as 📄 Frontend UI (Port 5173)
+    participant API as ⚙️ Express Backend (Port 5000)
+    participant DB as 💾 SQLite Database
 
     %% Submit Application
-    Citizen->>RequestPage: Enters Name, Phone, State, City, Gender
-    Citizen->>RequestPage: Clicks "Submit Application"
-    RequestPage->>RequestPage: Validates Input (Format, Required Fields)
-    
-    alt Validation Passed
-        RequestPage->>Context: submitApplication(formData)
-        Context->>Context: Compute getNextAppId() -> 'APP-0006'
-        Context->>Context: Append { id: 'APP-0006', status: 'Pending', submittedAt: Date }
-        Context->>Storage: localStorage.setItem('credvault_applications', data)
-        Storage-->>Context: Acknowledged
-        Context-->>RequestPage: Return newApp
-        RequestPage-->>Citizen: Display Success Modal with ID 'APP-0006'
-    else Validation Failed
-        RequestPage-->>Citizen: Display Inline Validation Errors
-    end
+    Citizen->>UI: Fills Form (Name, Phone, State, City, Gender)
+    Citizen->>UI: Clicks "Submit Application"
+    UI->>UI: Client-Side Validation (10-digit phone, non-empty fields)
+    UI->>API: POST /api/applications (JSON payload)
+    API->>API: Server-side validation check
+    API->>DB: Query max(applicationId) -> Generate 'APP-0006'
+    API->>DB: INSERT INTO Applications (APP-0006, 'Pending', ...)
+    DB-->>API: Row Committed
+    API-->>UI: 201 Created { success: true, applicationId: 'APP-0006', status: 'Pending' }
+    UI-->>Citizen: Renders Success Modal with Application ID
 
     %% Track Application
-    Citizen->>TrackPage: Enters 'APP-0006' & Clicks Search
-    TrackPage->>Context: trackApplication('APP-0006')
-    Context->>Context: Search applications array (case-insensitive)
-    Context-->>TrackPage: Return Application Object { status: 'Pending', ... }
-    TrackPage-->>Citizen: Renders Tracking Status Card with Pending Badge
+    Citizen->>UI: Navigates to Track Page & Enters 'APP-0006'
+    UI->>API: GET /api/applications/track/APP-0006
+    API->>DB: SELECT * FROM Applications WHERE applicationId = 'APP-0006'
+    DB-->>API: Returns Application Record
+    API-->>UI: 200 OK { applicationId, name, status: 'Pending', submittedAt }
+    UI-->>Citizen: Displays Status Card with Pending Badge
 ```
 
 ---
 
 ### 4. UML Sequence Diagram: Admin Issuance Flow
 
-This sequence diagram depicts the workflow where an Administrator reviews the submitted application, approves it, automatically issues a verifiable certificate, and revokes it if necessary.
-
 ```mermaid
 sequenceDiagram
     autonumber
     actor Admin as 👮 Administrator
-    participant AdminApp as 🖥️ AdminApplicationsPage
-    participant Context as ⚙️ AppContext (State)
-    participant Storage as 💾 LocalStorage
-    participant AdminCert as 📜 AdminCertificatesPage
+    participant UI as 🖥️ Admin Dashboard
+    participant API as ⚙️ Express Backend
+    participant DB as 💾 SQLite Database
     actor Citizen as 👤 Citizen
-    participant VerifyPage as 🛡️ VerifyPage
+    participant VerifyUI as 🛡️ Verification Portal
 
-    %% Approval & Issuance
-    Admin->>AdminApp: Views Pending Applications
-    Admin->>AdminApp: Clicks "Issue Certificate" for 'APP-0002'
-    AdminApp->>Context: approveApplication('APP-0002')
-    Context->>Context: Update application status to 'Approved'
-    Context->>Context: Compute getNextCertId() -> 'CERT-0003'
-    Context->>Context: Create Certificate record { id: 'CERT-0003', status: 'Valid', issuedOn: Today }
-    Context->>Storage: Persist updated applications & certificates
-    Storage-->>Context: Acknowledged
-    Context-->>AdminApp: Re-render state (Row updated to Approved)
+    %% Admin Login
+    Admin->>UI: Enters admin / admin
+    UI->>API: POST /api/admin/login
+    API->>DB: SELECT password FROM Admins WHERE username = 'admin'
+    API->>API: bcrypt.compare(password, hash)
+    API-->>UI: 200 OK { token: "JWT_TOKEN" }
+
+    %% Approve Application
+    Admin->>UI: Clicks "Issue Certificate" for 'APP-0002'
+    UI->>API: PATCH /api/admin/applications/APP-0002/approve (Bearer Token)
+    API->>API: Verify JWT Token
+    API->>DB: UPDATE Applications SET status = 'Approved' WHERE applicationId = 'APP-0002'
+    API->>DB: Generate 'CERT-0003'
+    API->>DB: INSERT INTO Certificates (CERT-0003, APP-0002, status='Valid')
+    DB-->>API: Changes Committed
+    API-->>UI: 200 OK { applicationId: 'APP-0002', certificateId: 'CERT-0003', status: 'Approved' }
+    UI-->>Admin: Table Row Updates to "Approved"
 
     %% Verification by Citizen
-    Citizen->>VerifyPage: Enters 'CERT-0003' into Verification Portal
-    VerifyPage->>Context: verifyCertificate('CERT-0003')
-    Context-->>VerifyPage: Return Certificate { status: 'Valid', name: 'Priya Patel', ... }
-    VerifyPage-->>Citizen: Displays Green Authenticated Certificate Card
+    Citizen->>VerifyUI: Enters 'CERT-0003'
+    VerifyUI->>API: GET /api/certificates/verify/CERT-0003
+    API->>DB: SELECT * FROM Certificates WHERE certificateId = 'CERT-0003'
+    DB-->>API: Returns Certificate Record
+    API-->>VerifyUI: 200 OK { certificateId: 'CERT-0003', name, phone, issuedOn, status: 'Valid' }
+    VerifyUI-->>Citizen: Displays Green Authenticated Certificate Card
 
     %% Revocation by Admin
-    Admin->>AdminCert: Navigates to Certificates Registry
-    Admin->>AdminCert: Clicks "Revoke" on 'CERT-0003'
-    AdminCert->>Context: revokeCertificate('CERT-0003')
-    Context->>Context: Update certificate status to 'Revoked'
-    Context->>Storage: Persist updated certificates
-    AdminCert-->>Admin: Displays Status as "Revoked" (Action disabled)
+    Admin->>UI: Clicks "Revoke" on 'CERT-0003'
+    UI->>API: PATCH /api/admin/certificates/CERT-0003/revoke (Bearer Token)
+    API->>DB: UPDATE Certificates SET status = 'Revoked' WHERE certificateId = 'CERT-0003'
+    DB-->>API: Changes Committed
+    API-->>UI: 200 OK { certificateId: 'CERT-0003', status: 'Revoked' }
+    UI-->>Admin: Status Badge reflects "Revoked"
 ```
 
 ---
 
-### 5. UML State Machine Diagram: Lifecycle States
-
-The State Machine diagram models the finite state transitions for both **Application** submissions and **Certificate** issuances.
+### 5. UML State Machine Diagram
 
 ```mermaid
 stateDiagram-v2
     direction TB
 
-    %% Application Lifecycle
     state "Application Lifecycle" as AppLifecycle {
         [*] --> Draft : User fills form
-        Draft --> Pending : Form submitted
+        Draft --> Pending : Form submitted (POST /api/applications)
         
         state Pending {
             description: "Awaiting administrative review"
         }
 
-        Pending --> Approved : Admin Approves / Issues
-        Pending --> Rejected : Admin Rejects (Invalid data)
+        Pending --> Approved : Officer Approves (PATCH /approve)
+        Pending --> Rejected : Officer Rejects (PATCH /reject)
 
         state Approved {
-            description: "Approved & Certificate generated"
+            description: "Auto-creates Certificate with Valid status"
         }
 
         state Rejected {
-            description: "Terminal rejection state"
+            description: "Terminal rejection with reason"
         }
 
         Approved --> [*]
         Rejected --> [*]
     }
 
-    %% Certificate Lifecycle
     state "Certificate Lifecycle" as CertLifecycle {
-        [*] --> Valid : Triggered by Application Approval
+        [*] --> Valid : Generated upon Application Approval
         
         state Valid {
-            description: "Active, authentic, and verifiable"
+            description: "Authentic & Verifiable"
         }
 
-        Valid --> Revoked : Officer Revokes Certificate
+        Valid --> Revoked : Officer Revokes (PATCH/GET /revoke)
 
         state Revoked {
-            description: "Invalidated, flagged in verification checks"
+            description: "Flagged Invalid during public verification"
         }
 
         Revoked --> [*]
@@ -332,104 +338,103 @@ stateDiagram-v2
 
 ---
 
-### 6. UML Component & Architecture Diagram
-
-This component diagram highlights the multi-tier frontend software architecture, modular directory segregation, and data-flow pipelines.
+### 6. UML Full-Stack Component & Data Flow Diagram
 
 ```mermaid
 flowchart TB
-    subgraph UI_Layer ["🎨 Presentation Layer (React + Router v6)"]
-        subgraph PublicPages ["Public Views"]
-            HP["HomePage (/)"]
-            RP["RequestPage (/request)"]
-            TP["TrackPage (/track)"]
-            VP["VerifyPage (/verify)"]
-        end
-
-        subgraph AdminPages ["Admin Views"]
-            ALP["AdminLoginPage (/admin/login)"]
-            AAP["AdminApplicationsPage (/admin/applications)"]
-            ACP["AdminCertificatesPage (/admin/certificates)"]
-        end
-
-        subgraph SharedComponents ["Reusable Component Library"]
-            NAV["Navbar & Responsive Menu"]
-            FOOT["Footer"]
-            PW["PageWrapper Layout"]
-        end
+    subgraph Presentation_Layer ["🎨 Frontend Client (React 18 + Vite : 5173)"]
+        HP["HomePage (/)"]
+        RP["RequestPage (/request)"]
+        TP["TrackPage (/track)"]
+        VP["VerifyPage (/verify)"]
+        ALP["AdminLoginPage (/admin/login)"]
+        AAP["AdminApplicationsPage (/admin/applications)"]
+        ACP["AdminCertificatesPage (/admin/certificates)"]
     end
 
-    subgraph Logic_Layer ["⚙️ State & Business Logic Layer"]
-        CTX["AppContext (Global Context Provider)"]
-        HOOK["useApp() Custom Hook"]
-        ID_GEN["Sequential ID Generator Engine"]
-        VAL["Client-side Validation Engine"]
+    subgraph Service_Layer ["⚙️ Backend REST API (Express : 5000)"]
+        AUTH["JWT Auth Guard"]
+        VALID["Input Validator"]
+        AppRoutes["/api/applications Routes"]
+        CertRoutes["/api/certificates Routes"]
+        AdminRoutes["/api/admin Routes"]
     end
 
-    subgraph Storage_Layer ["💾 Persistence Layer"]
-        LS[("HTML5 LocalStorage Engine")]
-        SEED["Seed Data Initializer (Mock Database)"]
+    subgraph Persistence_Layer ["💾 SQLite3 Database (credvault.db)"]
+        T_APP[("Applications Table")]
+        T_CERT[("Certificates Table")]
+        T_ADM[("Admins Table")]
     end
 
-    PublicPages --> HOOK
-    AdminPages --> HOOK
-    SharedComponents --> HOOK
-    HOOK --> CTX
-    CTX --> ID_GEN
-    CTX --> VAL
-    CTX <--> LS
-    SEED -.->|Hydrates on first run| LS
+    RP -->|POST /applications| VALID --> AppRoutes --> T_APP
+    TP -->|GET /track/:id| AppRoutes --> T_APP
+    VP -->|GET /verify/:id| CertRoutes --> T_CERT
+    ALP -->|POST /login| VALID --> AdminRoutes --> T_ADM
+    AAP -->|GET /applications| AUTH --> AdminRoutes --> T_APP
+    AAP -->|PATCH /approve| AUTH --> AdminRoutes --> T_APP & T_CERT
+    AAP -->|PATCH /reject| AUTH --> AdminRoutes --> T_APP
+    ACP -->|GET /certificates| AUTH --> AdminRoutes --> T_CERT
+    ACP -->|PATCH/GET /revoke| AUTH --> AdminRoutes --> T_CERT
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## 🌐 Backend REST API Specifications
 
-| Technology | Role | Highlights & Rationale |
-|---|---|---|
-| **React 18** | UI Framework | Component-based architecture, hooks (`useState`, `useEffect`, `useContext`) |
-| **Vite 5** | Bundler & Dev Server | Sub-second HMR, optimized production build bundle |
-| **React Router v6** | Client-Side Routing | Declarative routing, browser history management, clean URL paths |
-| **Lucide React** | Icons | Crisp, lightweight SVG vector icons matching design themes |
-| **Vanilla CSS3** | Styling & Theme | Custom CSS variables, responsive grid & flexbox, glassmorphic backdrop filters |
-| **HTML5 LocalStorage** | Data Persistence | Zero-configuration offline persistence across browser reloads |
+The backend server exposes **9 RESTful endpoints** matching the ELEVATE specification:
+
+| # | Endpoint | Method | Auth | Body / Params | Response |
+|---|---|---|---|---|---|
+| **1** | `/api/applications` | `POST` | Public | `{ name, phone, gender, city, state }` | `201 Created`: `{ success, applicationId, status: "Pending" }` |
+| **2** | `/api/applications/track/:applicationId` | `GET` | Public | Param: `applicationId` | `200 OK`: `{ applicationId, name, status, submittedAt }` or `404` |
+| **3** | `/api/certificates/verify/:certificateId` | `GET` | Public | Param: `certificateId` | `200 OK`: `{ certificateId, name, phone, issuedOn, status }` or `404` |
+| **4** | `/api/admin/login` | `POST` | Public | `{ username, password }` | `200 OK`: `{ token, admin: { username } }` or `401` |
+| **5** | `/api/admin/applications` | `GET` | Bearer Token | None | `200 OK`: `{ count, applications: [...] }` |
+| **6** | `/api/admin/applications/:applicationId/approve` | `PATCH` | Bearer Token | Param: `applicationId` | `200 OK`: Sets `Approved`, creates `CERT-XXXX` with `Valid` |
+| **7** | `/api/admin/applications/:applicationId/reject` | `PATCH` | Bearer Token | Param: `applicationId`, optional `{ reason }` | `200 OK`: Sets `Rejected` with reason |
+| **8** | `/api/admin/certificates` | `GET` | Bearer Token | None | `200 OK`: `{ count, certificates: [...] }` |
+| **9** | `/api/admin/certificates/:certificateId/revoke` | `PATCH` / `GET` | Bearer Token | Param: `certificateId` | `200 OK`: Sets `Revoked` *(Original app record unchanged)* |
 
 ---
 
-## 📁 Project Structure
+## 🗄️ Database Models & Schemas
 
+The backend uses embedded SQLite (`credvault.db`) with foreign key constraints:
+
+### 1. `Applications` Table
+```sql
+CREATE TABLE Applications (
+  applicationId TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  gender TEXT NOT NULL,
+  city TEXT NOT NULL,
+  state TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Pending' CHECK(status IN ('Pending', 'Approved', 'Rejected')),
+  submittedAt TEXT NOT NULL,
+  rejectReason TEXT DEFAULT NULL
+);
 ```
-CredVault/
-├── screenshots/                       # High-resolution application screenshots
-│   ├── 01-homepage.png
-│   ├── 02-request-form.png
-│   ├── 03-success-modal.png
-│   ├── 04-track-application.png
-│   ├── 05-verify-certificate.png
-│   ├── 06-admin-applications.png
-│   └── 07-admin-certificates.png
-├── src/
-│   ├── main.jsx                       # Application entrypoint & DOM mounting
-│   ├── App.jsx                        # Route table configuration & Root provider
-│   ├── index.css                      # Design tokens, typography & global CSS
-│   ├── context/
-│   │   └── AppContext.jsx             # State provider, localStorage adapter & mock database
-│   ├── components/
-│   │   ├── Navbar.jsx & Navbar.css    # Responsive top navigation & mobile drawer
-│   │   ├── Footer.jsx & Footer.css    # Standard footer with navigation links
-│   │   └── PageWrapper.jsx & .css     # Standardized container layout
-│   └── pages/
-│       ├── HomePage.jsx & .css        # Landing hero, CTA cards & live statistics
-│       ├── RequestPage.jsx & .css     # Certificate submission form with modal
-│       ├── TrackPage.jsx & .css       # Search & application tracking cards
-│       ├── VerifyPage.jsx             # Public certificate authenticity engine
-│       ├── AdminLoginPage.jsx & .css  # Authenticated officer login screen
-│       ├── AdminApplicationsPage.jsx  # Application review queue & issuance
-│       ├── AdminCertificatesPage.jsx  # Certificate registry & revocation ledger
-│       └── AdminPages.css             # Shared styles for administrative portals
-├── index.html                         # HTML template with Google Fonts (Outfit)
-├── package.json                       # Dependencies & build scripts
-└── vite.config.js                     # Vite build configuration
+
+### 2. `Certificates` Table
+```sql
+CREATE TABLE Certificates (
+  certificateId TEXT PRIMARY KEY,
+  applicationId TEXT NOT NULL,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  issuedOn TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Valid' CHECK(status IN ('Valid', 'Revoked')),
+  FOREIGN KEY (applicationId) REFERENCES Applications(applicationId)
+);
+```
+
+### 3. `Admins` Table
+```sql
+CREATE TABLE Admins (
+  username TEXT PRIMARY KEY,
+  password TEXT NOT NULL
+);
 ```
 
 ---
@@ -437,134 +442,172 @@ CredVault/
 ## 📸 Screenshots & Visual Tour
 
 ### 1. Home Page (`/`)
-*Interactive hero section with quick-action cards, platform metrics, and workflow guide.*
 ![Home Page](screenshots/01-homepage.png)
 
----
-
 ### 2. Request Certificate (`/request`)
-*Citizen application form with validation on contact numbers, state selection, and personal details.*
 ![Request Form](screenshots/02-request-form.png)
 
----
-
 ### 3. Application Submission Success Modal
-*Instant confirmation dialog providing the generated `APP-XXXX` ID and a one-click tracking redirect.*
 ![Success Modal](screenshots/03-success-modal.png)
 
----
-
 ### 4. Track Application (`/track`)
-*Real-time status inspector displaying submission details, date, and visual status indicators.*
 ![Track Application](screenshots/04-track-application.png)
 
----
-
 ### 5. Verify Certificate (`/verify`)
-*Public authenticity check displaying security badge, issue date, recipient information, and validity status.*
 ![Verify Certificate](screenshots/05-verify-certificate.png)
 
----
-
 ### 6. Admin Applications Management (`/admin/applications`)
-*Administrative dashboard allowing officers to inspect incoming applications and Issue or Reject them.*
 ![Admin Applications](screenshots/06-admin-applications.png)
 
----
-
 ### 7. Admin Certificate Registry (`/admin/certificates`)
-*Central certificate ledger displaying all active credentials with real-time revocation controls.*
 ![Admin Certificates](screenshots/07-admin-certificates.png)
 
 ---
 
-## 🚀 Getting Started & Local Setup
+## 🛠️ Full-Stack Tech Stack
 
-### Prerequisites
-- Node.js (v18.0.0 or higher recommended)
-- npm (v9.0.0 or higher)
-
-### Installation Steps
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/siddharth03015/CredVault-Elevate-Skills-Project.git
-   cd CredVault-Elevate-Skills-Project
-   ```
-
-2. **Install project dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Start the local development server:**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open in browser:**
-   Navigate to `http://localhost:5173/` in your preferred browser.
-
-5. **Build for production:**
-   ```bash
-   npm run build
-   npm run preview
-   ```
+| Layer | Technology | Version | Purpose |
+|---|---|---|---|
+| **Frontend Framework** | **React** | `18.x` | Declarative component UI |
+| **Build & Dev Server** | **Vite** | `5.x` | Instant HMR and asset bundling |
+| **Routing** | **React Router** | `v6` | Client-side routing and layout rendering |
+| **Icons** | **Lucide React** | `1.55+` | Clean SVG iconography |
+| **Backend Runtime** | **Node.js** | `20+` | Asynchronous JavaScript runtime |
+| **API Framework** | **Express.js** | `4.21+` | RESTful routing and middleware engine |
+| **Database** | **SQLite3** | `5.1+` | Zero-config embedded relational database |
+| **Authentication** | **JWT & bcryptjs** | `9.0 / 2.4` | Bearer token authorization and salted hashing |
+| **Styling** | **Vanilla CSS3** | Modern | Glassmorphism, CSS variables, and responsive layout |
 
 ---
 
-## 🔐 Admin Access & Demo Test Data
+## 📁 Project Structure
 
-### Administrative Credentials
-To access `/admin/applications` and `/admin/certificates`, navigate to `/admin/login` and use:
-
-| Field | Credentials |
-|---|---|
-| **Username** | `admin` |
-| **Password** | `admin` |
+```
+CredVault/
+├── backend/                           # ⚙️ Dedicated Backend Project (Task 3)
+│   ├── .env                           # Environment configuration (Port 5000, JWT Secret)
+│   ├── .env.example                   # Configuration template
+│   ├── .gitignore                     # Git ignore rules (node_modules, db files)
+│   ├── package.json                   # Dependencies & npm scripts
+│   ├── README.md                      # Backend specific API reference
+│   ├── test-api.js                    # 34-assertion automated test suite
+│   ├── credvault.db                   # SQLite database file
+│   └── src/
+│       ├── server.js                  # Express app, middleware & route mounting
+│       ├── db.js                      # Database adapter, schemas & sequential ID generators
+│       ├── middleware/
+│       │   ├── auth.js                # JWT & Bearer token guard
+│       │   └── validation.js          # Request payload validators
+│       └── routes/
+│           ├── applicationRoutes.js   # Citizen application routes
+│           ├── certificateRoutes.js   # Certificate verification routes
+│           └── adminRoutes.js         # Admin authorization & management routes
+├── screenshots/                       # 📸 High-resolution UI screenshots (Task 2)
+│   ├── 01-homepage.png
+│   ├── 02-request-form.png
+│   ├── 03-success-modal.png
+│   ├── 04-track-application.png
+│   ├── 05-verify-certificate.png
+│   ├── 06-admin-applications.png
+│   └── 07-admin-certificates.png
+├── src/                               # 🎨 React Frontend Client (Task 2)
+│   ├── main.jsx                       # Entrypoint
+│   ├── App.jsx                        # Route configuration
+│   ├── index.css                      # Global styles & design system
+│   ├── context/AppContext.jsx         # Global state & LocalStorage engine
+│   ├── components/                    # Navbar, Footer, PageWrapper
+│   └── pages/                         # All 7 frontend application views
+├── package.json                       # Frontend dependencies & scripts
+├── vite.config.js                     # Vite build configuration
+└── README.md                          # Full-stack documentation
+```
 
 ---
 
-### Pre-loaded Sample Test Records
+## 🚀 Local Setup & Running Instructions
 
-You can test the search and lookup tools right away using these pre-seeded identifiers:
+### 1. Prerequisites
+- **Node.js**: v18.0.0 or higher
+- **npm**: v9.0.0 or higher
 
-#### Application Tracking IDs (`/track`)
+### 2. Running the Frontend Portal (Port 5173)
+```powershell
+# Open terminal in root directory
+cd "e:\Elevate Skills"
+
+# Install dependencies (first time only)
+npm install
+
+# Start Vite dev server
+npm run dev
+```
+Open **[http://localhost:5173/](http://localhost:5173/)** in your browser.
+
+### 3. Running the Backend API Server (Port 5000)
+```powershell
+# Open terminal in backend directory
+cd "e:\Elevate Skills\backend"
+
+# Install dependencies (first time only)
+npm install
+
+# Start the Express API server
+npm start
+```
+The server will initialize the SQLite database (`credvault.db`), seed sample records, and start on **[http://localhost:5000](http://localhost:5000)**.
+Health check: **[http://localhost:5000/api/health](http://localhost:5000/api/health)**
+
+---
+
+## 🧪 Automated API Testing
+
+Run the automated integration test suite from the backend directory:
+
+```powershell
+cd "e:\Elevate Skills\backend"
+npm test
+```
+
+### Test Suite Results:
+```text
+========================================
+Test Results: 34 Passed, 0 Failed
+========================================
+```
+The test suite covers:
+- System health checks
+- Valid and invalid application submissions
+- Application tracking by ID & 404 handling
+- Public certificate verification (Valid, Revoked, 404)
+- Admin login (Valid JWT generation & 401 rejection)
+- Protected route authentication guards
+- Application approval and sequential certificate generation
+- Application rejection with custom reason
+- Certificate revocation and validation that original application record remains unchanged
+- Both `PATCH` and `GET` revocation endpoint compatibility
+
+---
+
+## 🔐 Admin Credentials & Seed Test Records
+
+### Administrator Credentials
+- **Username:** `admin`
+- **Password:** `admin`
+
+### Seed Applications
 | Application ID | Applicant Name | Initial Status |
 |---|---|---|
 | `APP-0001` | Aarav Sharma | **Approved** |
-| `APP-0002` | Priya Patel | **Pending** *(Try issuing this in Admin!)* |
+| `APP-0002` | Priya Patel | **Pending** |
 | `APP-0003` | Rohan Gupta | **Rejected** |
 | `APP-0004` | Sneha Reddy | **Approved** |
 | `APP-0005` | Vikram Singh | **Pending** |
 
-#### Certificate Verification IDs (`/verify`)
-| Certificate ID | Certificate Holder | Initial Status |
-|---|---|---|
-| `CERT-0001` | Aarav Sharma | 🟢 **Valid** |
-| `CERT-0002` | Sneha Reddy | 🔴 **Revoked** |
-
----
-
-## 💾 Data Storage & Persistence
-
-CredVault uses a client-side database simulation backed by HTML5 `localStorage`:
-
-- `credvault_applications`: Stores an array of all submitted citizen applications.
-- `credvault_certificates`: Stores all issued and revoked certificate records.
-- `credvault_admin`: Preserves officer authentication session across reloads.
-
-> **Resetting Data:** To restore the application to initial factory state, open your browser's Developer Tools Console (`F12`), run `localStorage.clear()`, and refresh the page.
-
----
-
-## 🗺️ Roadmap & Future Extensions
-
-- [ ] **Backend Integration:** Connect with Node.js/Express or FastAPI REST endpoints.
-- [ ] **PDF Certificate Export:** Generate cryptographically signed, downloadable PDF certificates.
-- [ ] **QR Code Verification:** Scan dynamic QR codes on certificates for zero-click instant verification.
-- [ ] **Decentralized Verification:** Anchor certificate hashes to an immutable ledger (Ethereum / Polygon).
-- [ ] **SMS & Email Alerts:** Automated notifications upon status changes (`Approved` / `Rejected`).
+### Seed Certificates
+| Certificate ID | Application ID | Recipient Name | Initial Status |
+|---|---|---|---|
+| `CERT-0001` | `APP-0001` | Aarav Sharma | 🟢 **Valid** |
+| `CERT-0002` | `APP-0004` | Sneha Reddy | 🔴 **Revoked** |
 
 ---
 
