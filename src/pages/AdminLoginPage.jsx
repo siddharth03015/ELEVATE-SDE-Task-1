@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, AlertCircle, Lock } from 'lucide-react';
 import PageWrapper from '../components/PageWrapper';
@@ -14,10 +14,11 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
 
   // If already logged in, redirect
-  if (isAdmin) {
-    navigate('/admin/applications', { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (isAdmin) {
+      navigate('/admin/applications', { replace: true });
+    }
+  }, [isAdmin, navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
