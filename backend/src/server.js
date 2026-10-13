@@ -46,6 +46,24 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime(), timestamp: new Date() });
 });
 
+// Public platform summary stats
+app.get('/api/stats', async (req, res) => {
+  try {
+    const { db } = require('./db');
+    const appCount = await db.get(`SELECT COUNT(*) as total FROM Applications`);
+    const certCount = await db.get(`SELECT COUNT(*) as total FROM Certificates`);
+    const validCount = await db.get(`SELECT COUNT(*) as total FROM Certificates WHERE status = 'Valid'`);
+    res.json({
+      success: true,
+      applications: appCount ? appCount.total : 0,
+      certificates: certCount ? certCount.total : 0,
+      verified: validCount ? validCount.total : 0,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Mount routes matching SRS specifications
 app.use('/api/applications', applicationRoutes);
 app.use('/api/certificates', certificateRoutes);

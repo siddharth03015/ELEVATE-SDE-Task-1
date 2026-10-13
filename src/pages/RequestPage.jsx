@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { FileText, CheckCircle, Send } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { FileText, CheckCircle, Send, AlertCircle, Loader2 } from 'lucide-react';
 import PageWrapper from '../components/PageWrapper';
 import { useApp, INDIAN_STATES } from '../context/AppContext';
 import './RequestPage.css';
@@ -17,6 +18,8 @@ export default function RequestPage() {
 
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [serverError, setServerError] = useState('');
 
   const validate = () => {
     const errs = {};
@@ -36,17 +39,26 @@ export default function RequestPage() {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
+    if (serverError) setServerError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setServerError('');
     const errs = validate();
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
     }
-    const newApp = submitApplication(form);
-    setSubmitted(newApp);
+    try {
+      setSubmitting(true);
+      const newApp = await submitApplication(form);
+      setSubmitted(newApp);
+    } catch (err) {
+      setServerError(err.message || 'Failed to submit application. Please check backend connection.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCloseModal = () => {
@@ -62,6 +74,24 @@ export default function RequestPage() {
       subtitle="Fill out the form below to submit a new certificate application."
     >
       <div className="glass-card request-form-card">
+        {serverError && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            borderRadius: '8px',
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            color: '#f87171',
+            fontSize: '14px',
+          }}>
+            <AlertCircle size={18} />
+            {serverError}
+          </div>
+        )}
+
         <form className="request-form" onSubmit={handleSubmit} noValidate>
           <div className="form-group">
             <label className="form-label" htmlFor="name">Full Name</label>
@@ -146,9 +176,22 @@ export default function RequestPage() {
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary btn-lg request-submit">
-            <Send size={18} />
-            Submit Application
+          <button
+            type="submit"
+            className="btn btn-primary btn-lg request-submit"
+            disabled={submitting}
+          >
+            {submitting ? (
+              <>
+                <Loader2 size={18} className="spin" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <Send size={18} />
+                Submit Application
+              </>
+            )}
           </button>
         </form>
       </div>
@@ -161,15 +204,20 @@ export default function RequestPage() {
             </div>
             <h2 className="success-title">Application Submitted Successfully!</h2>
             <p className="success-message">
-              Your certificate application has been received. Use the ID below to track your application status.
+              Your certificate application has been saved in the database. Use the Application ID below to track your status.
             </p>
             <div className="success-app-id">
-              {submitted.id}
+              {submitted.applicationId || submitted.id}
             </div>
             <br />
-            <button className="btn btn-primary" onClick={handleCloseModal}>
-              Done
-            </button>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button className="btn btn-primary" onClick={handleCloseModal}>
+                Done
+              </button>
+              <Link to="/track" className="btn btn-secondary">
+                Track Application
+              </Link>
+            </div>
           </div>
         </div>
       )}

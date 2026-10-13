@@ -229,9 +229,10 @@ router.patch('/applications/:applicationId/reject', adminAuth, async (req, res) 
 router.get('/certificates', adminAuth, async (req, res) => {
   try {
     const certificates = await db.all(
-      `SELECT certificateId, applicationId, name, phone, issuedOn, status
-       FROM Certificates
-       ORDER BY issuedOn DESC, certificateId DESC`
+      `SELECT c.certificateId, c.applicationId, c.name, c.phone, c.issuedOn, c.status, a.city, a.state
+       FROM Certificates c
+       LEFT JOIN Applications a ON UPPER(c.applicationId) = UPPER(a.applicationId)
+       ORDER BY c.issuedOn DESC, c.certificateId DESC`
     );
 
     return res.status(200).json({

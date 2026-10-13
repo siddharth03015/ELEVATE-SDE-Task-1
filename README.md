@@ -439,27 +439,43 @@ CREATE TABLE Admins (
 
 ---
 
-## 📸 Screenshots & Visual Tour
+---
+
+## 📸 Screenshots & Video Walkthrough
+
+### 🎬 Full Website Screen Recorded Walkthrough (End-to-End Flow)
+*Complete screen recording demonstrating citizen application submission, live tracking, admin login, application approval with certificate generation, public authenticity verification, and certificate revocation against the live SQLite database.*
+
+![CredVault Full-Stack Platform Walkthrough](screenshots/demo-walkthrough.webp)
+
+---
 
 ### 1. Home Page (`/`)
+*Interactive hero section with live platform metrics fetched directly from the database.*
 ![Home Page](screenshots/01-homepage.png)
 
 ### 2. Request Certificate (`/request`)
+*Citizen application form with real-time validation and asynchronous database submission.*
 ![Request Form](screenshots/02-request-form.png)
 
 ### 3. Application Submission Success Modal
+*Instant confirmation showing generated Application ID (`APP-XXXX`) with a direct link to track.*
 ![Success Modal](screenshots/03-success-modal.png)
 
 ### 4. Track Application (`/track`)
+*Real-time status inspector fetching live application details from the database by ID.*
 ![Track Application](screenshots/04-track-application.png)
 
 ### 5. Verify Certificate (`/verify`)
+*Public authenticity check validating certificate authenticity, recipient details, and validity status from the registry.*
 ![Verify Certificate](screenshots/05-verify-certificate.png)
 
 ### 6. Admin Applications Management (`/admin/applications`)
+*Protected administrative dashboard for reviewing applications and one-click Issue (auto-generating Certificate ID) or Reject with optional reasons.*
 ![Admin Applications](screenshots/06-admin-applications.png)
 
 ### 7. Admin Certificate Registry (`/admin/certificates`)
+*Central certificate ledger displaying all issued credentials with real-time revocation controls.*
 ![Admin Certificates](screenshots/07-admin-certificates.png)
 
 ---

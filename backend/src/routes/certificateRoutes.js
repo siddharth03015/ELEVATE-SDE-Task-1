@@ -20,9 +20,10 @@ router.get('/verify/:certificateId', async (req, res) => {
     }
 
     const cert = await db.get(
-      `SELECT certificateId, applicationId, name, phone, issuedOn, status
-       FROM Certificates
-       WHERE UPPER(certificateId) = UPPER(?)`,
+      `SELECT c.certificateId, c.applicationId, c.name, c.phone, c.issuedOn, c.status, a.city, a.state
+       FROM Certificates c
+       LEFT JOIN Applications a ON UPPER(c.applicationId) = UPPER(a.applicationId)
+       WHERE UPPER(c.certificateId) = UPPER(?)`,
       [certificateId.trim()]
     );
 
@@ -41,6 +42,8 @@ router.get('/verify/:certificateId', async (req, res) => {
       issuedOn: cert.issuedOn,
       status: cert.status,
       applicationId: cert.applicationId,
+      city: cert.city || '',
+      state: cert.state || '',
     });
   } catch (error) {
     console.error('Error verifying certificate:', error);

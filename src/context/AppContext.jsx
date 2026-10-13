@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { api } from '../api';
 
 const AppContext = createContext();
 
-// Indian states list
 export const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
@@ -13,208 +13,238 @@ export const INDIAN_STATES = [
   'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
 ];
 
-// Seed data
-const SEED_APPLICATIONS = [
-  {
-    id: 'APP-0001',
-    name: 'Aarav Sharma',
-    phone: '9876543210',
-    gender: 'Male',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    status: 'Approved',
-    submittedAt: '2026-10-01',
-  },
-  {
-    id: 'APP-0002',
-    name: 'Priya Patel',
-    phone: '9123456789',
-    gender: 'Female',
-    city: 'Ahmedabad',
-    state: 'Gujarat',
-    status: 'Pending',
-    submittedAt: '2026-10-05',
-  },
-  {
-    id: 'APP-0003',
-    name: 'Rohan Gupta',
-    phone: '9988776655',
-    gender: 'Male',
-    city: 'Delhi',
-    state: 'Delhi',
-    status: 'Rejected',
-    submittedAt: '2026-10-03',
-  },
-  {
-    id: 'APP-0004',
-    name: 'Sneha Reddy',
-    phone: '9654321870',
-    gender: 'Female',
-    city: 'Hyderabad',
-    state: 'Telangana',
-    status: 'Approved',
-    submittedAt: '2026-10-07',
-  },
-  {
-    id: 'APP-0005',
-    name: 'Vikram Singh',
-    phone: '9012345678',
-    gender: 'Male',
-    city: 'Jaipur',
-    state: 'Rajasthan',
-    status: 'Pending',
-    submittedAt: '2026-10-10',
-  },
-];
-
-const SEED_CERTIFICATES = [
-  {
-    id: 'CERT-0001',
-    applicationId: 'APP-0001',
-    name: 'Aarav Sharma',
-    phone: '9876543210',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    status: 'Valid',
-    issuedOn: '2026-10-02',
-  },
-  {
-    id: 'CERT-0002',
-    applicationId: 'APP-0004',
-    name: 'Sneha Reddy',
-    phone: '9654321870',
-    city: 'Hyderabad',
-    state: 'Telangana',
-    status: 'Revoked',
-    issuedOn: '2026-10-08',
-  },
-];
-
-function loadFromStorage(key, fallback) {
-  try {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 export function AppProvider({ children }) {
-  const [applications, setApplications] = useState(() =>
-    loadFromStorage('credvault_applications', SEED_APPLICATIONS)
-  );
-  const [certificates, setCertificates] = useState(() =>
-    loadFromStorage('credvault_certificates', SEED_CERTIFICATES)
-  );
-  const [isAdmin, setIsAdmin] = useState(() =>
-    loadFromStorage('credvault_admin', false)
-  );
+  const [applications, setApplications] = useState([]);
+  const [certificates, setCertificates] = useState([]);
+  const [stats, setStats] = useState({ applications: 0, certificates: 0, verified: 0 });
+  const [isAdmin, setIsAdmin] = useState(() => Boolean(localStorage.getItem('credvault_token')));
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Persist to localStorage
-  useEffect(() => {
-    localStorage.setItem('credvault_applications', JSON.stringify(applications));
-  }, [applications]);
-
-  useEffect(() => {
-    localStorage.setItem('credvault_certificates', JSON.stringify(certificates));
-  }, [certificates]);
-
-  useEffect(() => {
-    localStorage.setItem('credvault_admin', JSON.stringify(isAdmin));
-  }, [isAdmin]);
-
-  // Generate next ID
-  const getNextAppId = () => {
-    const maxNum = applications.reduce((max, app) => {
-      const num = parseInt(app.id.split('-')[1], 10);
-      return num > max ? num : max;
-    }, 0);
-    return `APP-${String(maxNum + 1).padStart(4, '0')}`;
-  };
-
-  const getNextCertId = () => {
-    const maxNum = certificates.reduce((max, cert) => {
-      const num = parseInt(cert.id.split('-')[1], 10);
-      return num > max ? num : max;
-    }, 0);
-    return `CERT-${String(maxNum + 1).padStart(4, '0')}`;
-  };
-
-  // Submit a new application
-  const submitApplication = (formData) => {
-    const newApp = {
-      id: getNextAppId(),
-      ...formData,
-      status: 'Pending',
-      submittedAt: new Date().toISOString().split('T')[0],
-    };
-    setApplications((prev) => [...prev, newApp]);
-    return newApp;
-  };
-
-  // Track an application
-  const trackApplication = (appId) => {
-    return applications.find((app) => app.id.toUpperCase() === appId.toUpperCase());
-  };
-
-  // Verify a certificate
-  const verifyCertificate = (certId) => {
-    return certificates.find((cert) => cert.id.toUpperCase() === certId.toUpperCase());
-  };
-
-  // Admin: Approve an application (issue certificate)
-  const approveApplication = (appId) => {
-    const app = applications.find((a) => a.id === appId);
-    if (!app) return;
-
-    setApplications((prev) =>
-      prev.map((a) => (a.id === appId ? { ...a, status: 'Approved' } : a))
-    );
-
-    const newCert = {
-      id: getNextCertId(),
-      applicationId: appId,
-      name: app.name,
-      phone: app.phone,
-      city: app.city,
-      state: app.state,
-      status: 'Valid',
-      issuedOn: new Date().toISOString().split('T')[0],
-    };
-    setCertificates((prev) => [...prev, newCert]);
-  };
-
-  // Admin: Reject an application
-  const rejectApplication = (appId) => {
-    setApplications((prev) =>
-      prev.map((a) => (a.id === appId ? { ...a, status: 'Rejected' } : a))
-    );
-  };
-
-  // Admin: Revoke a certificate
-  const revokeCertificate = (certId) => {
-    setCertificates((prev) =>
-      prev.map((c) => (c.id === certId ? { ...c, status: 'Revoked' } : c))
-    );
-  };
-
-  // Admin login
-  const adminLogin = (username, password) => {
-    if (username === 'admin' && password === 'admin') {
-      setIsAdmin(true);
-      return true;
+  // Load public statistics from backend database
+  const refreshStats = useCallback(async () => {
+    try {
+      const data = await api.getStats();
+      if (data && data.success) {
+        setStats({
+          applications: data.applications || 0,
+          certificates: data.certificates || 0,
+          verified: data.verified || 0,
+        });
+      }
+    } catch {
+      // Fallback stats gracefully
     }
-    return false;
+  }, []);
+
+  // Fetch all applications (Admin)
+  const fetchApplications = useCallback(async () => {
+    if (!localStorage.getItem('credvault_token')) return;
+    try {
+      setLoading(true);
+      const res = await api.getAdminApplications();
+      if (res && res.applications) {
+        // Normalize item IDs
+        const normalized = res.applications.map((app) => ({
+          ...app,
+          id: app.applicationId || app.id,
+        }));
+        setApplications(normalized);
+      }
+    } catch (err) {
+      console.error('Failed to load applications:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch all certificates (Admin)
+  const fetchCertificates = useCallback(async () => {
+    if (!localStorage.getItem('credvault_token')) return;
+    try {
+      setLoading(true);
+      const res = await api.getAdminCertificates();
+      if (res && res.certificates) {
+        // Normalize item IDs
+        const normalized = res.certificates.map((cert) => ({
+          ...cert,
+          id: cert.certificateId || cert.id,
+        }));
+        setCertificates(normalized);
+      }
+    } catch (err) {
+      console.error('Failed to load certificates:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Initial load
+  useEffect(() => {
+    refreshStats();
+    if (isAdmin) {
+      fetchApplications();
+      fetchCertificates();
+    }
+  }, [isAdmin, refreshStats, fetchApplications, fetchCertificates]);
+
+  // Citizen: Submit application via real backend API
+  const submitApplication = async (formData) => {
+    try {
+      setLoading(true);
+      const res = await api.submitApplication(formData);
+      await refreshStats();
+      if (isAdmin) {
+        await fetchApplications();
+      }
+      return {
+        id: res.applicationId,
+        applicationId: res.applicationId,
+        status: res.status || 'Pending',
+        ...formData,
+      };
+    } catch (err) {
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // Citizen: Track application by ID via real backend API
+  const trackApplication = async (appId) => {
+    try {
+      setLoading(true);
+      const res = await api.trackApplication(appId);
+      if (!res) return null;
+      return {
+        id: res.applicationId,
+        applicationId: res.applicationId,
+        name: res.name,
+        phone: res.phone,
+        city: res.city,
+        state: res.state,
+        gender: res.gender,
+        status: res.status,
+        submittedAt: res.submittedAt,
+        rejectReason: res.rejectReason,
+      };
+    } catch (err) {
+      if (err.status === 404) return null;
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Citizen: Verify certificate by ID via real backend API
+  const verifyCertificate = async (certId) => {
+    try {
+      setLoading(true);
+      const res = await api.verifyCertificate(certId);
+      if (!res) return null;
+      return {
+        id: res.certificateId,
+        certificateId: res.certificateId,
+        name: res.name,
+        phone: res.phone,
+        city: res.city,
+        state: res.state,
+        status: res.status,
+        issuedOn: res.issuedOn,
+        applicationId: res.applicationId,
+      };
+    } catch (err) {
+      if (err.status === 404) return null;
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Admin: Login via real backend API
+  const adminLogin = async (username, password) => {
+    try {
+      setLoading(true);
+      const res = await api.adminLogin(username, password);
+      if (res.token) {
+        setIsAdmin(true);
+        await Promise.all([fetchApplications(), fetchCertificates(), refreshStats()]);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      setIsAdmin(false);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Admin: Logout
   const adminLogout = () => {
+    api.adminLogout();
     setIsAdmin(false);
+    setApplications([]);
+    setCertificates([]);
+  };
+
+  // Admin: Approve application via real backend API
+  const approveApplication = async (appId) => {
+    try {
+      setLoading(true);
+      const res = await api.approveApplication(appId);
+      await Promise.all([fetchApplications(), fetchCertificates(), refreshStats()]);
+      return res;
+    } catch (err) {
+      console.error('Approve error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Admin: Reject application via real backend API
+  const rejectApplication = async (appId, reason = '') => {
+    try {
+      setLoading(true);
+      const res = await api.rejectApplication(appId, reason);
+      await Promise.all([fetchApplications(), refreshStats()]);
+      return res;
+    } catch (err) {
+      console.error('Reject error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Admin: Revoke certificate via real backend API
+  const revokeCertificate = async (certId) => {
+    try {
+      setLoading(true);
+      const res = await api.revokeCertificate(certId);
+      await Promise.all([fetchCertificates(), refreshStats()]);
+      return res;
+    } catch (err) {
+      console.error('Revoke error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const value = {
     applications,
     certificates,
+    stats,
     isAdmin,
+    loading,
+    error,
+    fetchApplications,
+    fetchCertificates,
+    refreshStats,
     submitApplication,
     trackApplication,
     verifyCertificate,

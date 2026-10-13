@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, AlertCircle, Lock } from 'lucide-react';
+import { LogIn, AlertCircle, Lock, Loader2 } from 'lucide-react';
 import PageWrapper from '../components/PageWrapper';
 import { useApp } from '../context/AppContext';
 import './AdminLoginPage.css';
@@ -12,6 +12,7 @@ export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // If already logged in, redirect
   useEffect(() => {
@@ -20,17 +21,25 @@ export default function AdminLoginPage() {
     }
   }, [isAdmin, navigate]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) {
       setError('Please fill in all fields.');
       return;
     }
-    const success = adminLogin(username, password);
-    if (success) {
-      navigate('/admin/applications');
-    } else {
-      setError('Invalid username or password.');
+    setError('');
+    setLoading(true);
+    try {
+      const success = await adminLogin(username.trim(), password);
+      if (success) {
+        navigate('/admin/applications');
+      } else {
+        setError('Invalid username or password.');
+      }
+    } catch (err) {
+      setError(err.message || 'Invalid credentials. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,9 +82,13 @@ export default function AdminLoginPage() {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-lg admin-login-submit">
-            <LogIn size={18} />
-            Sign In
+          <button
+            type="submit"
+            className="btn btn-primary btn-lg admin-login-submit"
+            disabled={loading}
+          >
+            {loading ? <Loader2 size={18} className="spin" /> : <LogIn size={18} />}
+            {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
 

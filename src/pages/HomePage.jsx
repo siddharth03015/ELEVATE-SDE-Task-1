@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import './HomePage.css';
 
 export default function HomePage() {
-  const { applications, certificates } = useApp();
+  const { stats } = useApp();
 
   return (
     <main className="page-wrapper">
@@ -56,17 +56,15 @@ export default function HomePage() {
 
           <div className="home-stats stagger-children">
             <div className="home-stat">
-              <div className="home-stat-value">{applications.length}</div>
+              <div className="home-stat-value">{stats.applications}</div>
               <div className="home-stat-label">Applications</div>
             </div>
             <div className="home-stat">
-              <div className="home-stat-value">{certificates.length}</div>
+              <div className="home-stat-value">{stats.certificates}</div>
               <div className="home-stat-label">Certificates</div>
             </div>
             <div className="home-stat">
-              <div className="home-stat-value">
-                {certificates.filter((c) => c.status === 'Valid').length}
-              </div>
+              <div className="home-stat-value">{stats.verified}</div>
               <div className="home-stat-label">Verified</div>
             </div>
           </div>
